@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign in to Radius Client</title>
+    <title>Sign in</title>
 
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
@@ -212,9 +212,15 @@
           const baseScheme = isAndroid ? appSettings.app_scheme_droid : appSettings.app_scheme_ios
           const appScheme = `${baseScheme}authenticate?authCode=${authCode}`
 
-          deviceMessage.textContent = `Click the button below to finish signing in on the ${appSettings.app_name ? appSettings.app_name +  " " : ""} mobile app.`
-          signInMessage.textContent = `Sign in to ${appSettings.app_name ? appSettings.app_name : ""}`
-          openAppLink.textContent = `Open ${appSettings.app_name ? appSettings.app_name + " " : ""}app`
+          deviceMessage.textContent = `Click the button below to finish signing in on the ${
+            appSettings.app_name ? appSettings.app_name + " " : ""
+          } mobile app. Please download the app before tapping open if you do not have the app installed.`
+          signInMessage.textContent = `Sign in to ${
+            appSettings.app_name ? appSettings.app_name : ""
+          }`
+          openAppLink.textContent = `Open ${
+            appSettings.app_name ? appSettings.app_name + " " : ""
+          }app`
           openAppLink.href = appScheme
           openAppLink.style.backgroundColor = appSettings.primary_color || "#fc466b"
           openAppLink.classList.remove("hidden")
