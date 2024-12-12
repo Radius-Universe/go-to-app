@@ -112,10 +112,10 @@
   <body>
     <div class="wrapper">
       <img id="appLogo" class="styled-image hidden" alt="App Logo" />
-      <h2 class="styled-heading">Sign in to Radius Client</h2>
+      <h2 id="signInMessage" class="styled-heading">Sign in</h2>
       <p id="deviceMessage" class="styled-text">Loading...</p>
       <p id="errorMessage" class="error-message hidden"></p>
-      <a id="openAppLink" class="styled-link hidden">Open Radius Client app</a>
+      <a id="openAppLink" class="styled-link hidden">Open app</a>
       <a id="downloadAppLink" class="styled-download-app hidden"
         >Do not have the app yet? Download now.</a
       >
@@ -201,6 +201,7 @@
         const deviceMessage = document.getElementById("deviceMessage")
         const openAppLink = document.getElementById("openAppLink")
         const downloadAppLink = document.getElementById("downloadAppLink")
+        const signInMessage = document.getElementById("signInMessage")
 
         if (!isAndroid && !isIOS) {
           deviceMessage.textContent = "Please open the page on your mobile phone."
@@ -211,8 +212,9 @@
           const baseScheme = isAndroid ? appSettings.app_scheme_droid : appSettings.app_scheme_ios
           const appScheme = `${baseScheme}authenticate?authCode=${authCode}`
 
-          deviceMessage.textContent =
-            "Click the button below to finish signing in on the radius client mobile app"
+          deviceMessage.textContent = `Click the button below to finish signing in on the ${appSettings.app_name ? appSettings.app_name +  " " : ""} mobile app.`
+          signInMessage.textContent = `Sign in to ${appSettings.app_name ? appSettings.app_name : ""}`
+          openAppLink.textContent = `Open ${appSettings.app_name ? appSettings.app_name + " " : ""}app`
           openAppLink.href = appScheme
           openAppLink.style.backgroundColor = appSettings.primary_color || "#fc466b"
           openAppLink.classList.remove("hidden")
