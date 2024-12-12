@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in to Radius Client</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        height: 100vh;
+        margin: 0 auto;
+        padding-left: 32px;
+        padding-right: 32px;
+        gap: 0px;
+        max-width: 400px;
+        justify-content: center;
+      }
+
+      .styled-link {
+        display: flex;
+        height: 48px;
+        max-width: 250px;
+        padding: 12px 16px;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        border-radius: 32px;
+        background: #fc466b;
+        cursor: pointer;
+        color: #fdfdfd;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 135%;
+        letter-spacing: 0.5px;
+        margin-top: 16px;
+        text-decoration: none;
+      }
+
+      .styled-link:hover {
+        color: #fdfdfd;
+      }
+
+      .styled-heading {
+        color: #232338;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 150%;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .styled-text {
+        color: #7d7da9;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 150%;
+        letter-spacing: 0.5px;
+        margin-bottom: 0;
+      }
+
+      .styled-image {
+        width: 55px;
+        height: 55px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+        border: 0;
+        outline: 0;
+      }
+
+      .styled-download-app {
+        color: #7d7da9;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 150%;
+        letter-spacing: 0.5px;
+        margin-top: 16px;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .error-message {
+        color: #7d7da9;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <img id="appLogo" class="styled-image hidden" alt="App Logo" />
+      <h2 class="styled-heading">Sign in to Radius Client</h2>
+      <p id="deviceMessage" class="styled-text">Loading...</p>
+      <p id="errorMessage" class="error-message hidden"></p>
+      <a id="openAppLink" class="styled-link hidden">Open Radius Client app</a>
+      <a id="downloadAppLink" class="styled-download-app hidden"
+        >Do not have the app yet? Download now.</a
+      >
+    </div>
+
+    <script>
+      const API_URL = "https://api1.agentdesks.com/v1.0/"
+
+      function showError(message) {
+        const errorElement = document.getElementById("errorMessage")
+        errorElement.textContent = message
+        errorElement.classList.remove("hidden")
+        document.getElementById("deviceMessage").classList.add("hidden")
+      }
+
+      function getUrlParams() {
+        const params = new URLSearchParams(window.location.search)
+        return {
+          appId: params.get("appId"),
+          authCode: params.get("authcode"),
+        }
+      }
+
+      function detectDevice() {
+        const userAgent = navigator.userAgent
+        return {
+          isAndroid: /Android/i.test(userAgent),
+          isIOS: /iPhone|iPad|iPod/i.test(userAgent),
+        }
+      }
+
+      async function getAppSettings() {
+        const { appId } = getUrlParams()
+
+        if (!appId) {
+          throw new Error("App ID is required")
+        }
+
+        try {
+          // Using all headers from the network request
+          const response = await fetch(`${API_URL}consumerapp/get-app-settings?app-id=${appId}`, {
+            method: "GET",
+          })
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          // Get the raw response text first
+          const rawText = await response.text()
+          console.log("Raw response:", rawText)
+
+          try {
+            // Parse the response text
+            const data = JSON.parse(rawText)
+            console.log("Parsed data:", data)
+
+            if (!data.response) {
+              throw new Error("Invalid response format")
+            }
+
+            return data.response
+          } catch (parseError) {
+            console.error("Parse error:", parseError)
+            throw new Error("Failed to parse server response")
+          }
+        } catch (error) {
+          console.error("Error in getAppSettings:", error)
+          throw error
+        }
+      }
+
+      function updateUI(appSettings) {
+        const { authCode } = getUrlParams()
+        const { isAndroid, isIOS } = detectDevice()
+
+        const appLogo = document.getElementById("appLogo")
+        if (appSettings.app_logo) {
+          appLogo.src = appSettings.app_logo
+          appLogo.classList.remove("hidden")
+        }
+
+        const deviceMessage = document.getElementById("deviceMessage")
+        const openAppLink = document.getElementById("openAppLink")
+        const downloadAppLink = document.getElementById("downloadAppLink")
+
+        if (!isAndroid && !isIOS) {
+          deviceMessage.textContent = "Please open the page on your mobile phone."
+          return
+        }
+
+        if (authCode && (isAndroid || isIOS)) {
+          const baseScheme = isAndroid ? appSettings.app_scheme_droid : appSettings.app_scheme_ios
+          const appScheme = `${baseScheme}authenticate?authCode=${authCode}`
+
+          deviceMessage.textContent =
+            "Click the button below to finish signing in on the radius client mobile app"
+          openAppLink.href = appScheme
+          openAppLink.style.backgroundColor = appSettings.primary_color || "#fc466b"
+          openAppLink.classList.remove("hidden")
+
+          if (appSettings.one_link_url) {
+            downloadAppLink.href = appSettings.one_link_url
+            downloadAppLink.classList.remove("hidden")
+          }
+        }
+      }
+
+      async function init() {
+        try {
+          console.log("Initializing application...")
+          const appSettings = await getAppSettings()
+          if (appSettings) {
+            updateUI(appSettings)
+          } else {
+            showError("Failed to load app settings")
+          }
+        } catch (error) {
+          console.error("Initialization error:", error)
+          showError(error.message)
+        }
+      }
+
+      init()
+    </script>
+  </body>
+</html>
